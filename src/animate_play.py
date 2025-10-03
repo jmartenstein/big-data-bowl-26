@@ -20,10 +20,10 @@ pio.renderers.default = (
     "browser"  # modify this to plot on something else besides browser
 )
 
-data_dir = "./data/kaggle"
+data_dir = "./data"
 
 # Modify the variables below to plot your desired play
-tracking_prefix = data_dir + "/tracking_week_"
+tracking_prefix = data_dir + "/train/input_2023_w"
 plays_file = data_dir + "/plays.csv"
 games_file = data_dir + "/games.csv"
 players_file = data_dir + "/players.csv"
@@ -99,67 +99,74 @@ position_groups = {
 }
 
 # Handle Data I/O
-df_game = pd.read_csv(games_file)
-df_plays = pd.read_csv(plays_file)
-df_players = pd.read_csv(players_file)
+#df_game = pd.read_csv(games_file)
+#df_plays = pd.read_csv(plays_file)
+#df_players = pd.read_csv(players_file)
 
-try:
-    week_number = df_game[(df_game["gameId"] == game_id)]["week"].values[0]
-except:
-    print("Could not find week for game")
-    sys.exit(1)
+week_number = "01"
+
+#try:
+#    week_number = df_game[(df_game["gameId"] == game_id)]["week"].values[0]
+#except:
+#    print("Could not find week for game")
+#    sys.exit(1)
 
 tracking_file = tracking_prefix + str(week_number) + ".csv"
-df_tracking_unmerged = pd.read_csv(tracking_file)
+df_full_tracking = pd.read_csv(tracking_file)
 
 # add footbal to players dataset
-df_tracking_unmerged[[ "nflId" ]] = df_tracking_unmerged[[ "nflId" ]].fillna(-1)
-df_players.loc[-1] = { 'nflId': -1, 'position': 'football' }
-df_players.index = df_players.index + 1
-df_players = df_players.sort_index()
+#df_tracking_unmerged[[ "nflId" ]] = df_tracking_unmerged[[ "nflId" ]].fillna(-1)
+#df_players.loc[-1] = { 'nflId': -1, 'position': 'football' }
+#df_players.index = df_players.index + 1
+#df_players = df_players.sort_index()
 
 # merge player positions into tracking data
-df_player_positions = df_players[[ "nflId", "position" ]]
-df_tr = df_tracking_unmerged.merge(df_player_positions, on=['nflId'])
-df_full_tracking = df_tr.merge(df_plays, on=["gameId", "playId"])
+#df_player_positions = df_players[[ "nflId", "position" ]]
+#df_tr = df_tracking_unmerged.merge(df_player_positions, on=['nflId'])
+#df_full_tracking = df_tr.merge(df_plays, on=["gameId", "playId"])
 
 df_focused = df_full_tracking[
-    (df_full_tracking["playId"] == play_id) & (df_full_tracking["gameId"] == game_id)
+    (df_full_tracking["play_id"] == play_id) & (df_full_tracking["game_id"] == game_id)
 ]
 
+print("df_focused data:")
+print(df_focused.head())
+
+#sys.exit(1)
+
 # Get General Play Information
-absolute_yd_line = df_focused.absoluteYardlineNumber.values[0]
+absolute_yd_line = df_focused.absolute_yardline_number.values[0]
 play_going_right = (
-    df_focused.playDirection.values[0] == "right"
+    df_focused.play_direction.values[0] == "right"
 )  # 0 if left, 1 if right
 
 line_of_scrimmage = absolute_yd_line
 
 # place LOS depending on play direction and absolute_yd_line. 110 because absolute_yd_line includes endzone width
 
-first_down_marker = (
-    (line_of_scrimmage + df_focused.yardsToGo.values[0])
-    if play_going_right
-    else (line_of_scrimmage - df_focused.yardsToGo.values[0])
-)  # Calculate 1st down marker
+#first_down_marker = (
+#    (line_of_scrimmage + df_focused.yards_to_go.values[0])
+#    if play_going_right
+#    else (line_of_scrimmage - df_focused.yardsToGo.values[0])
+#)  # Calculate 1st down marker
 
-down = df_focused.down.values[0]
-quarter = df_focused.quarter.values[0]
-gameClock = df_focused.gameClock.values[0]
-playDescription = df_focused.playDescription.values[0]
+#down = df_focused.down.values[0]
+#quarter = df_focused.quarter.values[0]
+#gameClock = df_focused.gameClock.values[0]
+#playDescription = df_focused.playDescription.values[0]
 lineset_frame_id = -1
 
 # Handle case where we have a really long Play Description and want to split it into two lines
-if len(playDescription.split(" ")) > 15 and len(playDescription) > 115:
-    playDescription = (
-        " ".join(playDescription.split(" ")[0:16])
-        + "<br>"
-        + " ".join(playDescription.split(" ")[16:])
-    )
+#if len(playDescription.split(" ")) > 15 and len(playDescription) > 115:
+#    playDescription = (
+#        " ".join(playDescription.split(" ")[0:16])
+#        + "<br>"
+#        + " ".join(playDescription.split(" ")[16:])
+#    )
 
-print(
-    f"Line of Scrimmage: {line_of_scrimmage}, First Down Marker: {first_down_marker}, Down: {down}, Quarter: {quarter}, Game Clock: {gameClock}, Play Description: {playDescription}"
-)
+#print(
+#    f"Line of Scrimmage: {line_of_scrimmage}, First Down Marker: {first_down_marker}, Down: {down}, Quarter: {quarter}, Game Clock: {gameClock}, Play Description: {playDescription}"
+#)
 
 # initialize plotly play and pause buttons for animation
 updatemenus_dict = [
@@ -221,7 +228,7 @@ sliders_dict = {
 }
 
 # Frame Info
-sorted_frame_list = df_focused.frameId.unique()
+sorted_frame_list = df_focused.frame_id.unique()
 sorted_frame_list.sort()
 
 frames = []
@@ -270,30 +277,30 @@ for frameId in sorted_frame_list:
         )
     )
     # Add First down line
-    data.append(
-        go.Scatter(
-            x=[first_down_marker, first_down_marker],
-            y=[0, 53.5],
-            line_dash="dash",
-            line_color="yellow",
-            showlegend=False,
-            hoverinfo="none",
-        )
-    )
+    #data.append(
+    #    go.Scatter(
+    #        x=[first_down_marker, first_down_marker],
+    #        y=[0, 53.5],
+    #        line_dash="dash",
+    #        line_color="yellow",
+    #        showlegend=False,
+    #        hoverinfo="none",
+    #    )
+    #)
 
     # Plot Players
     plot_df = df_focused[
-        (df_focused.frameId == frameId)
+        (df_focused.frame_id == frameId)
     ].copy()
 
     # get frame for Line Set event
-    if plot_df.event.values[0] == 'line_set':
-        lineset_frame_id = frameId
+    #if plot_df.event.values[0] == 'line_set':
+    #    lineset_frame_id = frameId
 
     # because football doesn't have an nflId, we're going to insert one
     # we assume each frame only has a single football
-    football_idx = plot_df.index[plot_df['club']=='football'].values[0]
-    plot_df.at[football_idx, 'nflId'] = 0
+    #football_idx = plot_df.index[plot_df['club']=='football'].values[0]
+    #plot_df.at[football_idx, 'nflId'] = 0
 
     p_dir = 0
 
@@ -302,28 +309,28 @@ for frameId in sorted_frame_list:
 
     for group, positions in position_groups.items():
 
-        pos_group_df = plot_df[ plot_df["position"].isin(positions) ]
+        pos_group_df = plot_df[ plot_df["player_position"].isin(positions) ]
 
         hover_text_array = []
         position_group_array = []
         player_color_array = []
 
-        for nflId in pos_group_df.nflId:
+        for nflId in pos_group_df.nfl_id:
 
-            selected_player_df = pos_group_df[pos_group_df.nflId == nflId]
+            selected_player_df = pos_group_df[pos_group_df.nfl_id == nflId]
 
-            p_id = int(selected_player_df['nflId'].values[0])
-            p_name = selected_player_df['displayName'].values[0]
+            p_id = int(selected_player_df['nfl_id'].values[0])
+            p_name = selected_player_df['player_name'].values[0]
             p_speed = selected_player_df['s'].values[0]
-            p_pos = selected_player_df['position'].values[0]
+            p_pos = selected_player_df['player_position'].values[0]
 
             hover_text = f"id: {str(p_id)}, pos: {p_pos}<br>" + \
                          f"name: {p_name}<br>" + \
                          f"spd: {p_speed} yd/sec<br>"
             hover_text_array.append(hover_text)
 
-            color = colors[pos_group_df['club'].values[0]]
-            player_color_array.append(color)
+            #color = colors[pos_group_df['club'].values[0]]
+            #player_color_array.append(color)
 
         data.append(
             go.Scatter(
@@ -369,9 +376,10 @@ layout = go.Layout(
     yaxis=dict(range=[0, 53.3], autorange=False, showgrid=False, showticklabels=False),
     plot_bgcolor="#00B140",
     # Create title and add play description at the bottom of the chart for better visual appeal
-    title=f"GameId: {game_id}, PlayId: {play_id}<br>{gameClock} {quarter}Q, Line Set at Frame {lineset_frame_id}"
-    + "<br>" * 19
-    + f"{playDescription}",
+    title=f"GameId: {game_id}, PlayId: {play_id}",
+    #title=f"GameId: {game_id}, PlayId: {play_id}<br>{gameClock} {quarter}Q, Line Set at Frame {lineset_frame_id}"
+    #+ "<br>" * 19
+    #+ f"{playDescription}",
     updatemenus=updatemenus_dict,
     sliders=[sliders_dict],
 )
@@ -379,19 +387,19 @@ layout = go.Layout(
 fig = go.Figure(data=frames[0]["data"], layout=layout, frames=frames[1:])
 
 # Create First Down Markers
-for y_val in [0, 53]:
-    fig.add_annotation(
-        x=first_down_marker,
-        y=y_val,
-        text=str(down),
-        showarrow=False,
-        font=dict(family="Courier New, monospace", size=16, color="black"),
-        align="center",
-        bordercolor="black",
-        borderwidth=2,
-        borderpad=4,
-        bgcolor="#ff7f0e",
-        opacity=1,
-    )
+#for y_val in [0, 53]:
+    #fig.add_annotation(
+    #    x=first_down_marker,
+    #    y=y_val,
+    #    text=str(down),
+    #    showarrow=False,
+    #    font=dict(family="Courier New, monospace", size=16, color="black"),
+    #    align="center",
+    #    bordercolor="black",
+    #    borderwidth=2,
+    #    borderpad=4,
+    #    bgcolor="#ff7f0e",
+    #    opacity=1,
+    #)
 
 fig.show()
