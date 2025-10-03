@@ -89,13 +89,15 @@ colors = {
     "WAS": "#5A1414",
     "football": "#CBB67C",
     "tackle": "#FFC0CB",
+    "Defense": "#FFDDFF",
+    "Offense": "#220022"
 }
 
 position_groups = {
-    "Backs & Receivers": ["QB", "WR", "RB", "FB", "TE"],
-    "Offensive Line":    ["C", "G", "T"],
-    "Defense":           ["NT", "CB", "DT", "DE", "DB", "LB", "MLB", "ILB", "OLB", "SS", "FS"],
-    "Football":          ["football"]
+    "Offense":        ["QB", "WR", "RB", "FB", "TE"],
+    "Defense":        ["NT", "CB", "DT", "DE", "DB", "LB", "MLB", "ILB", "OLB", "SS", "FS"],
+    "Offensive Line": ["C", "G", "T"],
+    "Football":       ["football"]
 }
 
 # Handle Data I/O
@@ -329,8 +331,8 @@ for frameId in sorted_frame_list:
                          f"spd: {p_speed} yd/sec<br>"
             hover_text_array.append(hover_text)
 
-            #color = colors[pos_group_df['club'].values[0]]
-            #player_color_array.append(color)
+            color = colors[pos_group_df['player_side'].values[0]]
+            player_color_array.append(color)
 
         data.append(
             go.Scatter(
